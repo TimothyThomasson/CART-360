@@ -216,7 +216,6 @@ void selectMode()
 void reset()
 //resets the array once reset() function is called
 {
-  // IMPLEMENT
   countNotes = 0;
 }
 /******************LIVE(): IMPLEMENT **************************************
@@ -228,9 +227,8 @@ void reset()
    THEN - output the note to the buzzer using the tone() function
 **************************************************************************/
 void live()
+//playing notes live if returned value of analogRead is more than 0
 {
-
-  //Serial.println(analogRead(NOTE_IN_PIN));
   if (analogRead(NOTE_IN_PIN) > 0) {
     tone(BUZZER_PIN, analogRead(NOTE_IN_PIN), duration);
   }
@@ -246,7 +244,7 @@ void live()
    THEN store that note in the array  - BE CAREFUL - you can only allow for up to MAX_NOTES to be stored
 **************************************************************************/
 void record()
-
+//Adding notes to array where max amount of notes is 16 
 {
   if (analogRead(NOTE_IN_PIN) > 0 && countNotes < MAX_NOTES) {
     tone(BUZZER_PIN, analogRead(NOTE_IN_PIN), duration);
@@ -267,10 +265,11 @@ void record()
 **************************************************************************/
 void play()
 {
-  // play recorded sound
+  // play recorded sound by running through array and playing tones
   for (int i = 0; i < 16; i ++) {
     tone(BUZZER_PIN, notes[i], duration);
     delay(250);
+    //stops play
     if (digitalRead(BUTTON_MODE_PIN) == HIGH) {
       break;
     }
@@ -288,7 +287,7 @@ void play()
 **************************************************************************/
 void loopMode()
 {
-  //Reverses the order of the array and decreases the delay between each tone.
+  //Reverses the order of the array and decreases the delay between each tone. Result is fast backwards loop
   for (int i = 0; i < 16; i ++) {
     tone(BUZZER_PIN, notes[(15 - i)], duration);
     delay(100);
