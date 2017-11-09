@@ -47,6 +47,25 @@
 byte hexArray[16] =
 {
   // you have to implement the necessary values for each element
+  
+  //1 
+  B10000001,
+  //2
+  B11110011,
+  //3
+  B01001001,
+  //4
+  B00110011,
+  //5
+  00100101,
+  //6
+  00000101,
+  //7
+  1111000,
+  //8
+  00000001,
+  
+  
 };
 
 void setupShiftRegister() {
@@ -62,6 +81,8 @@ SHIFT REG - BASED ON THE POT VAL
 void sendToShiftRegister(int pot)
 {
   // IMPLEMENT
+
+  
 }
 
 /******************READ FROM POT*********************************
