@@ -19,8 +19,7 @@
   Q5 -|    |- ST_CP
   Q6 -|    |- SH_CP
   Q7 -|    |- MR
- GND -| __ |- Q'
-
+  GND -| __ |- Q'
   Key:
   Q0 - Q7: Parallel Out Pins
   Q': Cascade Pin
@@ -40,57 +39,61 @@
 #define DATA_PIN 7
 
 /* CONSTANT FOR EMPTY*/
-#define EMPTY B00000001
+#define EMPTY B00000000
 
 /* DEFINE AND INITIALIZE THE ARRAY WITH THE NECESSARY VALUES */
-// Hex Character from 0 - F
+// bit array for use with 7-segment display
 byte hexArray[16] =
 {
-  // you have to implement the necessary values for each element
-  
-  //1 
-  B10000001,
-  //2
-  B11110011,
-  //3
-  B01001001,
-  //4
-  B00110011,
-  //5
-  00100101,
-  //6
-  00000101,
-  //7
-  1111000,
-  //8
-  00000001,
-  
-  
+  B10000001,    //0
+  B11110011,    //1
+  B01001001,    //2
+  B01100001,    //3
+  B00110011,    //4
+  B00100101,    //5
+  B00000101,    //6
+  B11110101,    //7
+  B00000001,    //8
+  B00110001,    //9
+  B00010001,    //A
+  B00000111,    //B
+  B10001101,    //C
+  B01000011,    //D
+  B00001101,    //E
+  B00011101     //F
 };
+
+void sendToShiftRegister(int pot)
+{
+  digitalWrite(LATCH_PIN, LOW);
+  shiftOut(DATA_PIN, CLOCK_PIN,  MSBFIRST, hexArray[pot]);        //shifts data out
+  digitalWrite(LATCH_PIN, HIGH);      //opens register for communication
+}
+
+void blinkSevenSegmentDisplay() {
+
+  digitalWrite(LATCH_PIN, LOW);
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, B11111111);
+  digitalWrite(LATCH_PIN, HIGH);
+
+  delay(DURATION);
+
+  digitalWrite(LATCH_PIN, LOW);
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, B11111110);
+  digitalWrite(LATCH_PIN, HIGH);
+
+  delay(DURATION);
+
+}
 
 void setupShiftRegister() {
   pinMode(LATCH_PIN, OUTPUT);
   pinMode(CLOCK_PIN, OUTPUT);
   pinMode(DATA_PIN, OUTPUT);
-  }
-  
-/******************sendToShiftRegister *******************************
-TODO:: IMPLEMENT THE FUNCTIONALITY TO SEND THE CORRECT DATA TO 
-SHIFT REG - BASED ON THE POT VAL
-********************************************************************/
-void sendToShiftRegister(int pot)
-{
-  // IMPLEMENT
-
-  
 }
 
-/******************READ FROM POT*********************************
-TO DO:: GET VALUE FROM POT AND ENSURE THE VALUE RETURNED IS A VALID VALUE 
-********************************************************************/
 int getAnalog() {
-
-  //IMPLEMENT
+  return analogRead(POT_PIN) / 64;      // translates range from 0 - 1023 to 0 - 15
 }
 
 #endif /* SHIFTREGISTER_H_ */

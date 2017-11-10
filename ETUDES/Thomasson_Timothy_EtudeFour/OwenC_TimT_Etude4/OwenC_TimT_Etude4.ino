@@ -1,6 +1,7 @@
-/********* 
- *  Timothy Thomasson & Owen Coolidge
- */
+
+
+/**********************OWEN COOLIDGE && TIMOTHY THOMASSON******************/
+
 
 /**********************ETUDE 4 CART 360 2017*******************************
    1/ As in Etude 3, in Etude 4 you will still Play & Record Notes and capture the associated Note Duration.
@@ -74,25 +75,18 @@ void setup()
    Then  - regardless of if the button is pressed:
    3: setRGB(): will set the color of the RGB LED based on the value of the mode variable
    4: selectMode(): will determine which function to call based on the value of the mode variable
-
 **************************************************************************/
 void loop()
 {
-  //
   if (modeChangeInterruptRequest)
   {
     chooseMode();
     delay(DURATION * 2);
-
     modeChangeInterruptRequest = ISFALSE;
-    /* TO DO ::: TURN OFF THE 7-SEGMENT DISPLAY */
   }
-
   setRGB();
   selectMode();
 }
-
-
 
 /******************CHOOSEMODE() -NOTHING TO CHANGE *********************************
    INSTRUCTIONS:
@@ -113,7 +107,6 @@ void chooseMode() {
   else mode = 0;
 }
 
-
 /**********************SELECTMODE() - NOTHING TO CHANGE *******************************
    INSTRUCTIONS:
    There is NO NEED to change this function - it selects WHICH function should run based on the mode variable
@@ -128,7 +121,6 @@ void chooseMode() {
    4: playWithDuration(): this function will playback any notes stored in the array that were recorded
    in the previous mode AND allow the user to store the pattern.
    5: retrieve():
-
 ******************************************************************************/
 void selectMode()
 {
@@ -157,8 +149,7 @@ void reset() {
   countNotes = 0;
   noTone(BUZZER_PIN);
   storeOnce = ISFALSE;
-  /* TO DO:: TURN OFF THE 7-SEGMENT DISPLAY */
-
+  digitalWrite(LATCH_PIN, LOW);
 }
 /******************LIVE()- NOTHING TO DO **************************************
    INSTRUCTIONS:
@@ -174,14 +165,11 @@ void live() {
   if (analogRead(NOTE_IN_PIN) > 8) {
     tone(BUZZER_PIN, analogRead(NOTE_IN_PIN), 100);
   }
-  // make sure that in record mode we cannot save a pattern
   if (storePatternInterruptRequest == ISTRUE)
   {
     storePatternInterruptRequest = ISFALSE;
   }
 }
-
-
 
 /******************RECORDWITHDURATION(): IMPLEMENT NEW ETUDE 4 ************
    INSTRUCTIONS:
@@ -194,10 +182,8 @@ void live() {
 void recordWithDuration()
 {
   int theAdjuster = 8;
-  // check we have not stored more than 16 notes
-  if (countNotes < MAX_NOTES) {
-    // read in the value from button press
-    testNote = analogRead(NOTE_IN_PIN);
+  if (countNotes < MAX_NOTES) {               // confirm that 16 notes have not been recorded yet
+    testNote = analogRead(NOTE_IN_PIN);       // store value from button press
     /*** STATE A::: *******************************************
         IF the testNote is > min AND the timer has not reached 5 secs:
         This means we are pressing on a note button
@@ -210,15 +196,17 @@ void recordWithDuration()
       */
       if (activeNoteButton == ISFALSE) {
 
-        t1.startUpTimer();
+        if (countNotes) {               // makes sure that the silence before any notes have been played isn't stored
+          addToArrayInBetween();
+        }
+        t1.startUpTimer();              //starts durations timer
         activeNoteButton = ISTRUE;
       }
       /*** STATE AA::: *******************************************
            IF the boolean is true it means we are continuing to press the button
       */
       else {
-        // update the timer (for durations)
-        t1.updateTimer();
+        t1.updateTimer();             // updates the note durations timer
         activeFrequency = testNote;
         playCurrentNote();
       }
@@ -228,7 +216,6 @@ void recordWithDuration()
        then turn OFF the buzzer.
     */
     else if (testNote > theAdjuster && (t1.getTimePassed() > MAX_PRESS_TIME)) {
-
       noTone(BUZZER_PIN);
     }
     /*** STATE C::: *******************************************
@@ -237,13 +224,13 @@ void recordWithDuration()
     */
     else if ((testNote <= theAdjuster && activeNoteButton == ISTRUE) ) {
       /*** FUNCTION TO IMPLEMENT ***/
+      t_between.startUpTimer();           //starts recording the duration of the silence
       updateArraysWithNoteAndTimings();
     }
   }
-  // make sure that in record mode we cannot save a pattern
-  if (storePatternInterruptRequest == ISTRUE)
-  {
+  if (storePatternInterruptRequest == ISTRUE) {  // makes sure that in record mode a pattern is not saved
     storePatternInterruptRequest = ISFALSE;
+
   }
 }
 
@@ -254,7 +241,6 @@ void recordWithDuration()
 **************************************************************************/
 void playCurrentNote() {
   tone(BUZZER_PIN, activeFrequency, 100);
-
 }
 /******************UPDATEARRAYSWITHNOTEANDTIMINGS():SMALL CHANGE ************
    INSTRUCTIONS:
@@ -270,7 +256,6 @@ void updateArraysWithNoteAndTimings() {
   countNotes++;
   activeNoteButton = ISFALSE;
   t1.setTimePassed(0);
-
 }
 /******************addToArrayInBetween(): IMPLEMENT *********************************
    INSTRUCTIONS:
@@ -278,7 +263,11 @@ void updateArraysWithNoteAndTimings() {
    You may also need to reset some variables....
   /*************************************************************************/
 void addToArrayInBetween() {
-  // IMPLEMENT
+
+  t_between.updateTimer();
+  durations_In_Between[countNotes] = t_between.getTimePassed();     // Stores time inbetween
+
+  t_between.setTimePassed(0);     // Resets time inbetween timer
 }
 
 /******************PLAYWITHDURATION(): ADAPTED FOR ETUDE 4 *******************
@@ -293,27 +282,32 @@ void playWithDuration() {
   while (storePatternInterruptRequest == ISFALSE && modeChangeInterruptRequest == ISFALSE ) {
     if (countNotes > 0) {
       tone(BUZZER_PIN, notes[i], durations[i]);
-      delay(durations[i]);
-      // ensure that you have values in this array ...
-      delay(durations_In_Between[i]);
+      delay(durations[i]);                    //delays while buzzer is playing
 
-      if (i < countNotes - 1) i++;
-      else {
+      delay(durations_In_Between[i]);         // delays amount inbetween respective notes
+
+      if (i < countNotes - 1) {
+        i++;
+
+      } else {
+
         i = 0;
         delay(DURATION);
+
       }
     }
-
   }
 
   if (countNotes > 0 && storePatternInterruptRequest == ISTRUE && storeOnce == ISFALSE)
   {
-    // TODO:: add pattern to our list
-    //HINT use the TestPattern files..... there is a specific function that one can do to do this...
-    //keep
+
+    addPattern(notes, durations, durations_In_Between, countNotes);  //using addPattern() function from TestPattern class to store recored pattern
+
     storeOnce = ISTRUE;
 
-    /* TO DO::: FLASH THE LED ON AND OFF for DURATION (once) */
+    digitalWrite(LED_PIN_G, LOW);        //blinks LED to signify a pattern has been saved
+    delay(100);
+    digitalWrite(LED_PIN_G, HIGH);
 
   }
   delay(DURATION * 2);
@@ -326,20 +320,19 @@ void playWithDuration() {
       make sure the seven segment display blinks.
       3/ otherwise, make sure that the shift register sends the correct number to the seven segment display
 
-
 **************************************************************************/
 void selectThePatternWithPot_Stage_0_(int & shiftRef)
 {
   while (storePatternInterruptRequest == ISFALSE && modeChangeInterruptRequest == ISFALSE) {
-    //1::YOU NEED TO IMPLEMENT THIS FUNCTION IN SHIFTREGISTER.h
+
     shiftRef = getAnalog();
 
-    if (isValidIndex(shiftRef) == ISFALSE) {
-      //2:: IMPLEMENT (again you will use functions that you implemented in SHIFTREGISTER.h)
+    if (isValidIndex(shiftRef) == ISFALSE) {  // index is not valid
+      blinkSevenSegmentDisplay();
     }
-    // is valid index
-    else {
-      //3::IMPLEMENT (again you will use functions that you implemented in SHIFTREGISTER.h)
+
+    else {                                    // index is valid
+      sendToShiftRegister(shiftRef);
     }
   }
 }
@@ -353,27 +346,39 @@ void selectThePatternWithPot_Stage_0_(int & shiftRef)
 **************************************************************************/
 void retrieveThePatternAccordingToSelection_Stage_1(int & shiftRef)
 {
-  while (modeChangeInterruptRequest == ISFALSE) {
+  while (modeChangeInterruptRequest == ISFALSE) {       //while mode button is not pressed
     if (isValidIndex(shiftRef) == ISTRUE) {
-      //1: TO DO :::RETRIEVE THE NOTES, PAUSES AND DURATIONS
-      //HINT::: you will need to return a reference from the appropriate testPattern function
-      // the FIRST one is given to you - the others will follow the same idea
-      const int * noteArray = retrievePatternNotes(shiftRef);
-      // you do::
-      // const int * durationsArray = ....
-      // const int * pausesArray =  ...
 
-      //2: TODO: play the current pattern:
-      //HINT: getNumberNotesOfPattern(shiftRef) -> will give you the number of notes in the pattern
+      const int * noteArray = retrievePatternNotes(shiftRef);
+      const int * durationsArray = retrievePatternDurations(shiftRef);
+      const int * pausesArray =  retrievePatternPauses(shiftRef);
+
+      int i = 0;
+      countNotes = getNumberNotesOfPattern(shiftRef);
+
+      while (storePatternInterruptRequest == ISFALSE && modeChangeInterruptRequest == ISFALSE ) {
+        if (countNotes > 0) {     // makes sure that values are in the array
+          tone(BUZZER_PIN, noteArray[i], durationsArray[i]);      //plays back recorded song
+          delay(durations[i]);
+          delay(pausesArray[i]);
+
+          if (i < countNotes - 1) {
+            i++;
+          } else {
+            i = 0;
+            delay(DURATION);
+          }
+        }
+      }
     }
   }
 }
+
 /******************RETRIEVEMODE(): IMPLEMENT *********************************
    INSTRUCTIONS:
    1/ while there are no patterns and the mode button is not pressed then blink the
    seven segment display for DURATION
    2/ otherwise select the pattern and prehaps retrieve it
-
 
 **************************************************************************/
 void retreiveMode()
@@ -381,17 +386,15 @@ void retreiveMode()
   noTone(BUZZER_PIN);
   static int shift = -1;
 
-  while (patternListIsEmpty() == ISTRUE && modeChangeInterruptRequest == ISFALSE) {
-    //1:: Implement - again you will use the functions you implemented in shiftRegister.h
+  while (patternListIsEmpty() == ISTRUE && modeChangeInterruptRequest == ISFALSE) {   //while there are no patterna and mode button is not pressed
+    blinkSevenSegmentDisplay();
   }
 
-  // not empty case::
-  //(PLEASE IMPLMENT THIS FUNCTION)
   selectThePatternWithPot_Stage_0_(shift);
-  // we will come here because the store button was pressed  -> so we go to next stage - (store that pattern)
+
   delay(DURATION * 2);
+
   storePatternInterruptReset();
-  // store and play the pattern until the mode button is pressed (PLEASE IMPLMENT THIS FUNCTION)
   retrieveThePatternAccordingToSelection_Stage_1(shift);
 }
 
@@ -440,9 +443,9 @@ void setRGB()
 
     case 4:
       {
-        analogWrite(LED_PIN_R, 90);   // Turn on the LED -R
+        analogWrite(LED_PIN_R, 125);   // Turn on the LED -R
         analogWrite(LED_PIN_G, 0);   // Turn on the LED -G
-        analogWrite(LED_PIN_B, 80);   // Turn on the LED -B
+        analogWrite(LED_PIN_B, 255);   // Turn on the LED -B
         break;
       }
   }
@@ -451,34 +454,23 @@ void setRGB()
 /**************************************************************************
   Anwser the  questions IN THIS SPACE....
 
-1. Please explain in your own words, what and how a Shift Register works -is this how it is used in the context of this Etude?
+  1.The purpose behind the shift register is to put forward serial inputs and manipulate the
+  on/off switches of the pins. We are using the 8 pins in the shift reg. to change the values
+  in the 7 segment display
 
+  2. To allow users to sequentially play each recorded comp. without having to go through the
+  whole cycle would be to take in the value of the potentiometer when the playback button is
+  pressed again to stop the replay. Then you could use this value to get the proper array.
 
+  3. To add changes from the photocell to the composition, elements would have to be read in a
+  large array based off a timer, and upon the retrieval of each element values from the photocell
+  would get added.
 
-
-2. The outcome for this Etude allows the user in Mode 3 to Store a Pattern and then in Mode 4 to select a Pattern by using 
-the Potentiometer, then they click on the Store Button and that Pattern is Retrieved and Played. At this point, if the user wants to 
-select another Stored Pattern they need to use the Mode Button to cycle through mode 1 -> mode 4 in order to do so.
-
-
-
-
-3. In this Etude,we do not use the Photocell to modulate the Note Frequency while it is being pressed. Please explain briefly how one could STORE
-a modulated Note over time (i.e. how would one store the changes in frequency over a specific time interval)?NB:youneed not consider the specific code implementation provided for this Etude.
-
-
-
-
-
-4. Please provide 2 ideas (150words each) for how you would suggest to extend this instrument we have been developing throughout the semester
-
-
-
-
-
-
-
-
+  4.Our first  idea is to implement a third button to create a multitrack composition. The
+  user would press this button, and the previously recorded track would start to play.  The
+  user could then play over what was already recorded and add layers to it. Then, when this
+  button is pressed again, the tracks would merge together to create a more complex composition.
+  Another interesting addition to this instrument could be a third button that plays each stored
+  composition back sequentially. That way you could make simple musical patterns that when linked
+  together becomes more interesting and longer strings of sounds.
   /**************************************************************************/
-
-

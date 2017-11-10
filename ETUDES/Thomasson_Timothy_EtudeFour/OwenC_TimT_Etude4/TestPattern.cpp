@@ -72,10 +72,3 @@ void addPattern(const int * cNotes, const int * cDurations, const int * cPauses,
  }
 
 
-
-
-
-
-
-
-
